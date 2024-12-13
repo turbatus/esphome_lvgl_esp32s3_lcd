@@ -3,7 +3,7 @@ Esphome powered 7inch LCD dev board (ESP32S3)
 Inspiration sources are mentioned in comments inside the yaml files
 
 ### This repo only hosts the relevant hardware yaml files for the 7" ESP32S3 LCD screen
-Evrything else is just common Homeasisstant stuff, sensors, switches, etc.
+Everything else is just common Homeasisstant stuff, sensors, switches, etc.
 
 ### I have modded the LCD a little, to add PWM capabilities to the backlight 
 The LCD can only turn the backlight on and off. If you need to adjust the brightness, you need to modify the hardware. There is a reserved pad, next to the ESP32S3 module (picture 1).
