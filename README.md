@@ -1,5 +1,6 @@
 # esphome_lvgl_esp32s3_lcd
 Esphome powered 7inch LCD dev board (ESP32S3)
+Inspiration sources are mentioned in comments inside the yaml files
 
 ### This repo only hosts the relevant hardware yaml files for the 7" ESP32S3 LCD screen
 Evrything else is just common Homeasisstant stuff, sensors, switches, etc.
