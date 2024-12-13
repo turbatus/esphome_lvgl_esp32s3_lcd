@@ -82,6 +82,7 @@ display:
       number: 3
       ignore_strapping_warning: true
     pclk_pin: 7
+    #comments hold the initial values, which did not work for me
     pclk_inverted: true #true
     hsync_back_porch: 40 #30
     hsync_front_porch: 20 #210 
