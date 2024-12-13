@@ -4,6 +4,7 @@ Inspiration sources are mentioned in comments inside the yaml files
 
 ### This repo only hosts the relevant hardware yaml files for the 7" ESP32S3 LCD screen
 Everything else (not included here) is just common Homeasisstant stuff, sensors, switches, etc.
+![FB_IMG_1734088089437](https://github.com/user-attachments/assets/df610bf4-bd16-4114-998a-965679510efd)  
 
 ### I have modded the LCD a little, to add PWM capabilities to the backlight 
 The LCD can only turn the backlight on and off. If you need to adjust the brightness, you need to modify the hardware. There is a reserved pad, next to the ESP32S3 module (picture 1).
