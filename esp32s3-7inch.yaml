@@ -1,0 +1,538 @@
+substitutions:
+  name: esp32s3-7inch
+  friendly_name: ESP32S3_7inch
+  comment: "Waveshare 7in LCD"
+  scl_pin: GPIO09
+  sda_pin: GPIO08
+  clk_pin: GPIO12
+  mosi_pin: GPIO11
+  cs_pin: "4"
+  bkl_pin: "2"
+  touch_rst_pin: "1"
+  lcd_rst_pin: "3"
+
+esphome:
+  name: $name
+  friendly_name: $friendly_name
+  comment: "$comment"
+  min_version: 2023.11.0
+  platformio_options:
+    build_flags: "-DBOARD_HAS_PSRAM"
+    board_build.arduino.memory_type: qio_opi
+    board_build.flash_mode: dio
+    board_upload.maximum_ram_size: 524288
+    board_build.flash_size: 8MB
+#https://community.home-assistant.io/t/waveshare-4-3-inch-esp32-with-rpi-dpi-rgb-driver-no-display/766453/2
+#https://github.com/lboue/ESPHome_Waveshare_ESP32-S3_Touch_4.3/blob/main/Waveshare_ESP32-S3_Touch_4.3.yaml
+
+#include hardware stuff (i2c, displays, touch, IO expander, etc)
+<<: !include 7inch_assets/hw.yaml
+
+#include common stuff (ota, time, wifi, etc)
+<<: !include 7inch_assets/common.yaml
+
+#include lvgl fonts
+<<: !include 7inch_assets/lvgl_fonts.yaml
+
+#include scripts and intervals (dynamic stuff)
+<<: !include 7inch_assets/scripts_intervals.yaml
+
+#include switches, buttons, sensors, variables, etc
+<<: !include 7inch_assets/input_output.yaml
+
+#the actual GUI
+lvgl:
+  displays:
+    - big_display
+  touchscreens:
+    - big_touch
+  buffer_size: 100%
+  on_idle:
+    - timeout: !lambda "return (id(display_timeout).state * 1000);" #20s
+      then:
+        - logger.log: Idle timeout
+        - logger.log: Turning off backlight
+        - light.turn_on: #- switch.turn_off: bk_light
+            id: lcd_pwm_light
+            brightness: 30%
+        #- lvgl.pause:
+        #- logger.log: LVGL paused
+        #- logger.log: Backlight off!
+  <<: !include 7inch_assets/lvgl_styles.yaml
+  pages:
+    - id: digital_clock
+      height: 100%
+      width: 100%
+      bg_grad: blue_to_green
+      widgets:
+        - obj: # digital Clock container
+            x: 5
+            y: 5
+            height: 280 
+            width: 790 
+            radius: 10
+            #align: BOTTOM_LEFT
+            pad_all: 5
+            border_width: 0
+            outline_width: 1
+            outline_pad: 0
+            bg_grad: blue_to_green
+            scrollable: false   
+            widgets:
+              - label:
+                  id: digital_hour
+                  hidden: false
+                  styles: lcd_txt_color
+                  border_width: 0
+                  align: TOP_LEFT
+                  x: -20
+                  y: -30
+                  height: 400
+                  width: 400
+                  recolor: true
+                  text_align: CENTER
+                  text: "23"
+              - label:
+                  id: digital_dots
+                  styles: lcd_dots_color
+                  border_width: 0
+                  border_color: 0xFF00FF
+                  align: TOP_MID
+                  x: -5
+                  y: -130
+                  height: 400
+                  width: 30
+                  recolor: true
+                  text_align: CENTER
+                  text: dots    
+              - label:
+                  id: digital_minutes
+                  hidden: false
+                  styles: lcd_txt_color
+                  border_width: 0
+                  x: 405
+                  y: -30
+                  height: 400
+                  width: 400
+                  recolor: true
+                  text_align: CENTER
+                  text: "09"
+                  long_mode: CLIP
+  #front bottom 1st pill
+        - obj:
+            x: 5
+            y: -50
+            height: 135
+            width: 195 
+            radius: 10
+            align: BOTTOM_LEFT
+            pad_all: 5
+            border_width: 0
+            outline_width: 1
+            outline_pad: 0
+            bg_grad: blue_to_green
+            scrollable: false   
+            widgets:
+              - label:
+                  text: "12"
+                  x: 10
+                  y: 10
+                  height: 60
+                  width: 60
+                  text_font: stib_font_big
+                  text_align: CENTER
+                  text_color: 0xFFFFFF
+                  bg_color: 0x338c26
+                  bg_opa: 100%
+                  border_width: 1
+                  radius: 5
+              - led:
+                  x: 160
+                  y: 10
+                  width: 15
+                  height: 15
+                  id: led_12
+                  #align: CENTER
+                  color: 0xFF0000
+                  brightness: 100%
+              - label:
+                  text: "--"
+                  x: 70
+                  y: 20
+                  width: 120
+                  id: stib_12
+                  recolor: true
+                  text_align: CENTER
+                  long_mode: SCROLL_CIRCULAR
+                  text_font: stib_font
+                  text_color: 0xFFFFFF
+                  pad_all: 10
+              - label:
+                  text: "Brussels City"
+                  x: 20
+                  y: 80
+                  width: 160
+                  text_align: CENTER
+                  long_mode: SCROLL_CIRCULAR                  
+                  text_font: stib_font
+                  text_color: 0xFFFFFF
+
+  #front bottom 2nd pill
+        - obj:
+            x: 205
+            y: -50
+            height: 135
+            width: 195 
+            radius: 10
+            align: BOTTOM_LEFT
+            pad_all: 5
+            border_width: 0
+            outline_width: 1
+            outline_pad: 0
+            bg_grad: blue_to_green
+            scrollable: false   
+            widgets:
+              - label:
+                  text: "21"
+                  x: 10
+                  y: 10
+                  height: 60
+                  width: 60
+                  text_font: stib_font_big
+                  text_align: CENTER
+                  text_color: 0xFFFFFF
+                  bg_color: 0xf7e017
+                  bg_opa: 100%
+                  border_width: 1
+                  radius: 5
+              - led:
+                  x: 160
+                  y: 10
+                  width: 15
+                  height: 15
+                  id: led_21
+                  #align: CENTER
+                  color: 0xFF0000
+                  brightness: 100%
+              - label:
+                  text: "--"
+                  x: 70
+                  y: 20
+                  width: 120
+                  id: stib_21
+                  text_align: CENTER
+                  long_mode: SCROLL_CIRCULAR
+                  text_font: stib_font
+                  text_color: 0xFFFFFF
+                  pad_all: 10
+              - label:
+                  text: "Luxembourg"
+                  x: 20
+                  y: 80
+                  width: 160
+                  text_align: CENTER
+                  long_mode: SCROLL_CIRCULAR                  
+                  text_font: stib_font
+                  text_color: 0xFFFFFF
+  # front bottom 3rd pill
+        - obj:
+            x: 405
+            y: -50
+            height: 135
+            width: 195
+            radius: 10
+            align: BOTTOM_LEFT
+            pad_all: 5
+            border_width: 0
+            outline_width: 1
+            outline_pad: 0
+            bg_grad: blue_to_green
+            scrollable: false   
+            widgets:
+              - label:
+                  text: "62"
+                  x: 10
+                  y: 10
+                  height: 60
+                  width: 60
+                  text_font: stib_font_big
+                  text_align: CENTER
+                  text_color: 0x000000
+                  bg_color: 0xff9ec2
+                  bg_opa: 100%
+                  border_width: 1
+                  radius: 5
+              - led:
+                  x: 160
+                  y: 10
+                  width: 15
+                  height: 15
+                  id: led_62
+                  #align: CENTER
+                  color: 0xFF0000
+                  brightness: 100%
+              - label:
+                  text: "--"
+                  x: 70
+                  y: 20
+                  width: 120
+                  id: stib_62
+                  text_align: CENTER
+                  long_mode: SCROLL_CIRCULAR
+                  text_font: stib_font
+                  text_color: 0xFFFFFF
+                  pad_all: 10
+              - label:
+                  text: "Heysel"
+                  x: 20
+                  y: 80
+                  width: 160
+                  text_align: CENTER
+                  long_mode: SCROLL_CIRCULAR                  
+                  text_font: stib_font
+                  text_color: 0xFFFFFF
+  # front bottom 4th pill
+        - obj:
+            x: 605
+            y: -50
+            height: 135
+            width: 190 
+            radius: 10
+            align: BOTTOM_LEFT
+            pad_all: 5
+            border_width: 0
+            outline_width: 1
+            outline_pad: 0
+            bg_grad: blue_to_green
+            scrollable: false
+            widgets:
+              - label:
+                  text: "63"
+                  x: 10
+                  y: 10
+                  height: 60
+                  width: 60
+                  text_font: stib_font_big
+                  text_align: CENTER
+                  text_color: 0x000000
+                  bg_color: 0x9ebfe3
+                  bg_opa: 100%
+                  border_width: 1
+                  radius: 5
+              - led:
+                  x: 150
+                  y: 10
+                  width: 15
+                  height: 15
+                  id: led_63
+                  #align: CENTER
+                  color: 0xFF0000
+                  brightness: 100%
+              - label:
+                  text: "--"
+                  x: 70
+                  y: 20
+                  width: 120
+                  id: stib_63
+                  text_align: CENTER
+                  long_mode: SCROLL_CIRCULAR
+                  text_font: stib_font
+                  text_color: 0xFFFFFF
+                  pad_all: 10
+              - label:
+                  text: "Gare Centrale"
+                  x: 20
+                  y: 80
+                  width: 160
+                  text_align: CENTER
+                  long_mode: SCROLL_CIRCULAR                  
+                  text_font: stib_font
+                  text_color: 0xFFFFFF
+  #bottom left weather pill
+        - obj:
+            x: 5
+            y: 435
+            height: 45
+            width: 250 
+            radius: 5
+            pad_left: 10
+            border_width: 0
+            outline_width: 1
+            outline_pad: 0
+            bg_grad: blue_to_green
+            scrollable: false
+            widgets:
+              - label:
+                  # x: 5
+                  # y: 0
+                  text: "\U000F14E4"
+                  id: lbl_weather_forecast_condition_icon
+                  text_font: icons_small
+                  text_align: RIGHT
+                  text_color: 0xFFFFFF
+                  align: LEFT_MID
+              - label:
+                  # x: 50
+                  # y: 0
+                  text: "Unknown"
+                  id: lbl_weather_forecast_condition_name
+                  text_align: LEFT
+                  text_color: 0xFFFFFF
+                  text_font: message_font
+                  align: CENTER
+
+  #bottom right weather pill
+        - obj:
+            x: 550
+            y: 435
+            height: 45
+            width: 250 
+            radius: 5
+            pad_left: 10
+            border_width: 0
+            outline_width: 1
+            outline_pad: 0
+            bg_grad: blue_to_green
+            scrollable: false
+            widgets:
+              - label:
+                  #x: 5
+                  #y: 0
+                  text: "Se simte ca:"
+                  text_align: RIGHT
+                  text_color: 0xFFFFFF
+                  align: LEFT_MID
+              - label:
+                  #x: 50
+                  #y: 0
+                  text: "--.- °C"
+                  id: lbl_weather_forecast_tempap
+                  text_align: LEFT
+                  text_color: 0xFFFFFF
+                  text_font: message_font
+                  align: RIGHT_MID
+
+
+
+  #weather page
+    - id: weather_page
+      height: 300
+      width: 800
+      pad_all: 10
+      bg_grad: blue_to_light
+      widgets:
+        - obj: #weather container
+            align: TOP_LEFT
+            width: 228
+            height: 250
+            pad_all: 10
+            layout:
+              type: GRID
+              grid_rows: [FR(48), FR(13), FR(13), FR(13), FR(13)]
+              grid_columns: [FR(10), FR(40), FR(40), FR(10)]
+            widgets:
+
+                  # grid_cell_row_pos: 0
+                  # grid_cell_column_pos: 0
+                  # grid_cell_column_span: 2
+                  # grid_cell_x_align: CENTER
+                  # grid_cell_y_align: START
+
+
+                  # grid_cell_row_pos: 0
+                  # grid_cell_column_pos: 2
+                  # grid_cell_column_span: 2
+                  # grid_cell_x_align: STRETCH
+                  # grid_cell_y_align: CENTER
+
+
+                  # grid_cell_row_pos: 1
+                  # grid_cell_column_pos: 2
+                  # grid_cell_x_align: STRETCH
+
+              - label:
+                  text: "Maximum:"
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 1
+
+              - label:
+                  text: "--.- °C"
+                  id: lbl_weather_forecast_temphi
+                  text_align: RIGHT
+                  grid_cell_row_pos: 2
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: STRETCH
+
+              - label:
+                  text: "Minimum:"
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 1
+
+              - label:
+                  text: "--.- °C"
+                  id: lbl_weather_forecast_templo
+                  text_align: RIGHT
+                  grid_cell_row_pos: 3
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: STRETCH
+
+              - label:
+                  text: "Now:"
+                  grid_cell_row_pos: 4
+                  grid_cell_column_pos: 1
+
+              - label:
+                  text: "--.- °C"
+                  id: lbl_weather_outdnoor_now
+                  text_align: RIGHT
+                  grid_cell_row_pos: 4
+                  grid_cell_column_pos: 2
+                  grid_cell_x_align: STRETCH
+  top_layer:
+    widgets:
+        - obj: # footer container
+            height: size_content
+            width: 240 #240
+            
+            align: BOTTOM_MID
+            pad_all: 0
+            border_width: 1
+            bg_color: 0x000000
+            bg_grad: blue_to_green
+            #bg_grad_color: 0x444444
+            bg_dither_mode: ORDERED
+            bg_grad_dir: VER
+            
+            layout:
+              type: flex
+              flex_flow: COLUMN
+              flex_align_cross: CENTER
+              flex_align_main: CENTER
+            widgets:
+              - buttonmatrix:
+                  align: bottom_mid
+                  styles: header_footer
+                  radius: 10
+                  pad_all: 0
+                  outline_width: 0
+                  id: top_layer
+                  items:
+                    styles: header_footer
+                    text_font: montserrat_38
+                  rows:
+                    - buttons:
+                      - id: page_prev
+                        text: "\uF053"
+                        on_press:
+                          then:
+                            lvgl.page.previous:
+                      - id: page_home
+                        text: "\uF015"
+                        on_press:
+                          then:
+                            lvgl.page.show: digital_clock
+                      - id: page_next
+                        text: "\uF054"
+                        on_press:
+                          then:
+                            lvgl.page.next:
