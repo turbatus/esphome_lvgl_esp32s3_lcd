@@ -1,1 +1,111 @@
-hw
+
+esp32:
+  board: esp32-s3-devkitc-1 
+  variant: ESP32S3
+  flash_size: 8MB
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_ESP32S3_DEFAULT_CPU_FREQ_240: y
+      CONFIG_ESP32S3_DATA_CACHE_64KB: y
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
+      CONFIG_SPIRAM_RODATA: y
+      CONFIG_ESPTOOLPY_FLASHSIZE_8MB: y
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+#port expander
+ch422g:
+  - id: io_ex
+    #address: 0x24
+
+i2c:
+  sda: $sda_pin
+  scl: $scl_pin
+  scan: True
+  id: bus_a
+  frequency: 400kHz
+
+touchscreen:
+  platform: gt911
+  id: big_touch
+  interrupt_pin: 4
+  reset_pin:
+    ch422g: io_ex
+    number: 1
+  on_touch:
+    then:
+      #- switch.turn_on: bk_light
+      - lambda: |-
+          ESP_LOGD("cal", "x=%d, y=%d, x_raw=%d, y_raw=%0d",
+              touch.x,
+              touch.y,
+              touch.x_raw,
+              touch.y_raw
+              );
+  on_release:
+    then:
+      - if:
+          condition: lvgl.is_paused
+          then:
+              - logger.log: "LVGL resuming"
+              - lvgl.resume:
+              - lvgl.widget.redraw:
+              - light.turn_on: #- switch.turn_off: bk_light
+                  id: lcd_pwm_light
+                  brightness: 40% #- switch.turn_on: bk_light          
+
+display:
+  - platform: rpi_dpi_rgb
+    id: big_display
+    auto_clear_enabled: false
+    color_order: RGB
+    update_interval: never
+    pclk_frequency: 16MHz
+    dimensions:
+      width: 800
+      height: 480
+    de_pin:
+      number: 5
+    reset_pin:
+     ch422g: io_ex
+     number: $lcd_rst_pin
+    # enable_pin:
+    #   ch422g: io_ex
+    #   number: $bkl_pin      
+    hsync_pin:
+      number: 46
+      ignore_strapping_warning: true
+    vsync_pin:
+      number: 3
+      ignore_strapping_warning: true
+    pclk_pin: 7
+    pclk_inverted: true #true
+    hsync_back_porch: 40 #30
+    hsync_front_porch: 20 #210 
+    hsync_pulse_width: 1 #30
+    vsync_back_porch: 8 #4
+    vsync_front_porch: 4 #4
+    vsync_pulse_width: 1 #4
+    data_pins:
+      red:
+        - 1         #r3
+        - 2         #r4
+        - 42        #r5
+        - 41        #r6
+        - 40        #r7
+      blue:
+        - 14        #b3
+        - 38        #b4
+        - 18        #b5
+        - 17        #b6
+        - 10        #b7
+      green:
+        - 39        #g2
+        - 0         #g3
+        - 45        #g4
+        - 48        #g5
+        - 47        #g6
+        - 21        #g7
